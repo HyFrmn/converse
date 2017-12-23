@@ -1,0 +1,49 @@
+{
+	"name":"bruce",
+	"prompts": {
+		"intro" : {
+			"text": "Who are you?",
+			"response": "hello",
+			"conditions" : [["met","is","falsy"]]
+		},
+		"sales" : {
+			"text": "Do you have anything for sale?",
+			"response" : "sale",
+			"conditions" : [["met","is","truthy"]]
+		},
+		"know" : {
+			"text": "Do you know Kaiser Sose?",
+			"response":"no",
+			"conditions" : [["met","is","truthy"]]
+		}
+	},
+	"responses" : {
+		"hello" : {
+			"text" : "I'm $name. What do you want?",
+			"actions":[
+				["set","met",true]
+			]
+		},
+		"sale" : {
+			"text" : "This is what I have to sell.",
+		},
+		"spice" : {
+			"text" : ""
+		},
+		"no" : {
+			"text" : "How did you hear that name?",
+			"prompts":{
+				"docks" : {
+					"text": "I heard it from Marcus at the Docks",
+					"response" : "marcus",
+				},
+				"jackknife" : {
+					"text" : "Jacknife told me, while begging for his life."
+				},
+				"follow" : {
+					"text" : "I've  been following you for the last few days, you seem to be in the middle of all his operations."
+				}
+			}
+		},
+	}
+}
