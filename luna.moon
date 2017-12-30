@@ -1,81 +1,109 @@
 require "moon.all"
-json = require "json"
 actions = require "actions"
-
-file = io.open("dialog.json", "r")
-json_data = file\read("*all")
-file\close!
-encoded=json_data
-dialog_data = json.decode(encoded)
 
 -- prompting
 -- responding
 PROMPTING=0
 RESPONDING=1
 
+class Actor
+    new: (id, name) =>
+        @id = id
+        @name = name
+
 class Dialog
-	new: (data) =>
-		@name = data.name
-		@responses = data.responses
-		@prompts = data.prompts
-		@blackboard = {}
-		@current_prompts
-		@current_choices = nil
-		@state = PROMPTING
+    new: (actor, copy, nxt) =>
+        @actor = actor
+        @copy = copy
+        @id = -1
+        @next = nxt
 
-	get_prompts: =>
-		results = {}
-		if @current_prompts == nil
-			@current_prompts = @prompts
-		for name, prompt in pairs(@current_prompts)
-			include = true
-			if prompt.conditions != nil
-				include = false
-				for condition in *prompt.conditions
-					key, compare, val = unpack condition
-					if compare == "is"
-						if val == "truthy"
-							if @blackboard[key]==true
-								include=true
-						else
-							if @blackboard[key]==false or @blackboard[key]==nil
-								include=true
-			if include
-				table.insert results, prompt
-		@current_choices = results
-		return @current_choices
+class Choice extends Dialog
+    new: (actor, copy, choices) =>
+        super(actor, copy)
+        @_choices = choices
 
-	get_choice: (choice) =>
-		r = @current_choices[choice].response
-		response =  @responses[r]
-		if response.actions != nil
-			for action in *response.actions
-				if actions[action[1]] != nil
-					actions[action[1]](@, action)
-		@current_choices = nil
-		@current_prompts = response.prompts
-		return response
+    choices: =>
+        return @_choices
 
+class Interaction
+    new: (conversation, first) =>
+        @conversation = conversation
+        @current = conversation.start
+
+    next: (choice=-1) =>
+        id = nil
+        if type(@current) == Choice
+            c = @current\choices()[choice]
+            id = c.node
+        else
+            id = @current.next
+        @current = nil
+        if id != nil
+            @current = @conversation.nodes[id]
+
+class Conversation
+    new: () =>
+        @actors = {}
+        @nodes = {}
+        @memory = {}
+        @start = nil
+
+    Load: (data) ->
+        c = Conversation()
+        for a in *data.actors
+            actor = Actor(a.id, a.name)
+            c.actors[a.id] = actor
+        for id, node in pairs(data.nodes)
+            if node.choices != nil
+                n = Choice(c.actors[node.actor], node.copy, node.choices)
+                c.nodes[id] = n
+                n.id = id
+            else
+                n = Dialog(c.actors[node.actor], node.copy, node.next)
+                c.nodes[id] = n
+                n.id = id
+        c.start = c.nodes[data.start]
+        return c
+
+    new_interaction: =>
+        return Interaction(@, @start)
+
+-- Example Usage
 main = ->
-	d = Dialog(dialog_data)
-	while true
-		results = d\get_prompts!
-		choice = 1
-		for prompt in *results
-			print choice .. ". " .. prompt.text
-			choice += 1
+    narrator = Actor("")
+    pc = Actor("Arnold")
+    wit1 = Actor("Delores")
+    wit2 = Actor("Mavie")
+    wit3 = Actor("Teddy")
 
-		choice = nil
-		success = false
-		while success == false
-			choice = io.read("*n")
-			if choice != nil
-				success = true
-			else
-				print "Invalid input, please try again."
-				io.read()
 
-		response = d\get_choice(choice)
-		print response.text
+    a = Dialog(wit1, "I saw a man run out of the bank and down the street.")
+    b = Dialog(wit2, "Some one wearing a red shirt knocked me down on my way into the bank.")
+    c = Dialog(wit3, "I saw some one in a red shirt, ride out of town west. They were riding a black horse with white spots.")
 
-main!
+    choice = Choice(pc, "Who would you like to talk to?", {
+        {a, "Interview witness 1"}
+        {b, "Interview witness 2"}
+        {c, "Interview witness 3"}
+        {nil, "Exit"}
+    })
+
+    a.next = choice
+    b.next = choice
+    c.next = choice
+
+    i = Interaction(choice)
+
+
+
+
+
+{
+    :main
+    :Actor
+    :Choice
+    :Dialog
+    :Interaction
+    :Conversation
+}

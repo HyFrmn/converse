@@ -1,0 +1,70 @@
+actors:
+  -
+    id: "narrator"
+    name: ""
+  -
+    id: "pc"
+    name: "Arnold"
+  -
+    id: "wit1"
+    name: "Delores"
+  -
+    id: "wit2"
+    name: "Mavie"
+  -
+    id: "wit3"
+    name: "Teddy"
+  -
+    id: wyatt
+    name: Wyatt
+  -
+    id: william
+    name: William
+  -
+    id: murdoch
+    name: Murdoch
+
+start: witness_interview
+
+nodes:
+  accuse:
+    actor: pc
+    copy: Who are you going to accuse?
+    choices:
+      -
+        node: accuse_wyatt
+        copy: Accuse Wyatt of the Robbery.
+      -
+        node: accuse_william
+        copy: Accuse William of the Robbery.
+      -
+        node: accuse_murdoch
+        copy: Accuse Murdoch of the Robbery.
+  wit1_interview:
+    actor: wit1
+    copy: "I saw a man run out of the bank and down the street."
+    next: witness_interview
+  wit2_interview:
+      actor: wit2
+      copy: "Some one wearing a red shirt knocked me down on my way into the bank."
+      next: witness_interview
+  wit3_interview:
+      actor: wit3
+      copy: "I saw some one in a red shirt, ride out of town west. They were riding a black horse with white spots."
+      next: witness_interview
+  witness_interview:
+    actor: pc
+    copy: "Who would you like to interview?"
+    choices:
+      -
+        node: wit1_interview
+        copy: Interview witness 1
+      -
+        node: wit2_interview 
+        copy: Interview witness 2
+      -
+        node: wit3_interview 
+        copy: Interview witness 3
+      -
+        node: null
+        copy: Exit
